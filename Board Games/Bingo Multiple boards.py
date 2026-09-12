@@ -89,7 +89,7 @@ if __name__ == "__main__":
     
     num_workers = 8
     results = []
-    repeats = 25_000
+    repeats = 125_000
     print(f"Total trials: {num_workers*repeats:,}")
     with ProcessPoolExecutor(max_workers=num_workers) as executor:
         futures = [executor.submit(dual_trials, repeats) for _ in range(num_workers)]
