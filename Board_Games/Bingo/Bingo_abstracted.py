@@ -1,0 +1,135 @@
+import random
+import time
+from concurrent.futures import ProcessPoolExecutor
+
+def shuffle(list):
+    random.shuffle(list)
+    return list
+
+
+def make_bingo_board():
+    bingo = [shuffle([i+j for i in range(1,15+1)])[:5] for j in range(0,75,15)]
+    bingo = [num for row in bingo for num in row]
+    bingo[12] = 'x'
+    
+    return bingo
+
+
+
+
+
+class Bingo:
+    def __init__(self):
+        self.board = make_bingo_board()
+        self.marked = 1
+        self.find = {i:index for index, i in enumerate(self.board)}
+        
+    def print_board(self):
+        print("B   I   N   G   O")
+        for index, num in enumerate(self.board):
+            print(f"{num}", end = " ")
+            if not index % 5:
+                print("\n")
+        print()
+
+    def clear_num(self, num):
+        if num in self.find:
+            pos = self.find[num]
+        else:
+            return
+        self.board[pos] = 'x'
+        self.marked += 1
+
+    def check_blackout(self):
+        return self.marked == 25
+    
+def print_game(game):
+    for player, boards in game.items():
+        print(f"Player {player[-1]}")
+        for board in boards:
+            board.print_board()
+    print("-"*25)
+    print()
+
+def n_boards(n):
+    return [Bingo() for _ in range(n)]
+
+
+
+#print_game(game)
+
+def play_bingo(num_board1, num_board2):
+    game = {"p1":n_boards(num_board1), "p2":n_boards(num_board2)}
+    numbers = list(range(1,76))
+    random.shuffle(numbers)
+    states = {player:[] for player in game}
+    game_end = False
+    #print_game(game)
+    for num in numbers:
+        for player, boards in game.items():
+            states[player].clear()
+            for board in boards:
+                board.clear_num(num)
+                states[player].append(board.check_blackout())
+                if board.check_blackout():
+                    #print_game(game)
+                    game_end = True
+        if game_end:
+            break
+
+    # for player, state in states.items():
+    #     print(player,state)
+
+    if any(states["p1"]) and any(states["p2"]):
+        #print("Tie")
+        return "tie"
+
+    elif any(states["p1"]) and not any(states["p2"]):
+        #print("Player 1 got blackout!")
+        return "p1"
+
+    elif not any(states["p1"]) and any(states["p2"]):
+        #print("Player 2 got blackout!")
+        return "p2"
+
+
+def dual_trials(repeats):
+    count = {"p1":0, "p2":0, "tie":0}
+    for _ in range(repeats):
+        count[play_bingo(1,10)] += 1
+    return count
+                
+            
+
+
+if __name__ == "__main__":
+    start = time.perf_counter()
+
+    
+    num_workers = 8
+    results = []
+    repeats = 25_000
+    with ProcessPoolExecutor(max_workers=num_workers) as executor:
+        futures = [executor.submit(dual_trials, repeats) for _ in range(num_workers)]
+        for future in futures:
+            results.append(future.result())
+
+    counts = {"p1":0, "p2":0, "tie":0}
+    for count in results:
+        for k,v in count.items():
+            counts[k] += v
+    
+    for k,v in counts.items():
+        print(f"{k}, {100*v/(repeats*num_workers)}")
+
+    end = time.perf_counter() - start
+
+   
+
+
+    print(f"{end//60} minutes and {end%60} seconds")
+    print()
+    #print(f"{6/22}, {13/22}, {3/22}")
+
+
+
