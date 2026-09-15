@@ -20,9 +20,7 @@ class Bingo:
             self.marked += 1
             return True
         return False
-    
-    # def check_blackout(self):
-    #     return self.marked == 25
+
     
 
 def play_bingo(num_board1, num_board2):
@@ -66,7 +64,7 @@ def dual_trials(repeats):
 def bingo_trials(repeats):
     rounds = {i:0 for i in range(25,76)}
     numbers = list(range(1,76))
-
+    
     for _ in range(repeats):
         bingo = Bingo()    
         random.shuffle(numbers)
@@ -79,16 +77,12 @@ def bingo_trials(repeats):
         
 
 
-
-
-
-
 if __name__ == "__main__":
     start = time.perf_counter()
 
     results = []
     num_workers = 8
-    repeats = 125_0000
+    repeats = 1_2500_000
     totals = num_workers * repeats
     print(f"Total trials: {totals:,}")
     with ProcessPoolExecutor(max_workers=num_workers) as executor:
@@ -102,16 +96,23 @@ if __name__ == "__main__":
     for counts in results:
         for k,v in counts.items():
             total_count[k] += v
-    
 
+    allow = False
+    for k,v in total_count.items():
+        if v == 0:
+            continue
+        else:
+            allow = True
+        if allow:
+            print(f"{k}, {v:,}")
 
     print(f"{end//60} minutes and {end%60} seconds")
 
 
     with open("data.txt", "w") as file:
         for k,v in total_count.items():
-            row = f"{k}, {100*v/totals:.5f}\n"
-            print(row, end = '')
+            row = f"{k}, {100*v/totals:.8f}\n"
+            #print(row, end = '')
             file.write(row)
 
 
