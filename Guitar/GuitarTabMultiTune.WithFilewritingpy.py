@@ -115,20 +115,26 @@ print('If you have a repeated letter, use the letter twice, (A and AA, A# and AA
 print('You can also type presets like "Drop G 7" or "E Standard 6"')
 print()
 
-#Take user input Tuning and confirmation
-while True:
-  strings = add_strings()
-  print()
-  for i in strings:
-    print(i)
-  print()
-  reset = input('Confirm (Y/N) ').upper()
-  if reset in ("Y","YES"):
-    numstr = len(strings)
-    break
-  else:
-    continue
+def get_new_tuning():
+  pass
 
+#Take user input Tuning and confirmation
+def get_tuning(new = False):
+  if new:
+    get_new_tuning()
+  while True:
+    strings = add_strings()
+    print()
+    for i in strings:
+      print(i)
+    print()
+    reset = input('Confirm (Y/N): ').upper()
+    if reset in ("Y","YES"):
+      return strings
+    else:
+      continue
+
+strings = get_tuning()
 #print()
 #print(strings)
 print()
@@ -160,12 +166,14 @@ print_tab(strings)
 #-------------------------------------------------------------------------------
 
 #Clear file
-file_name = input("Give this tab a name \n")
-target_file = f"{file_name}.txt"
-with open(target_file, "w") as file:
-  file.write(file_name)
-  file.write(" Tabs \n\n")
-  print()
+def tab_create():
+  file_name = input("Give this tab a name \n")
+  target_file = f"{file_name}.txt"
+  with open(target_file, "w") as file:
+      file.write(file_name)
+      file.write(" Tabs \n\n")
+      print()
+  return target_file
 
 def tab_write(strings,file_name):
   #Create a copy
@@ -193,6 +201,7 @@ def tab_write(strings,file_name):
       file.write("\n")
     file.write("\n")
 
+target_file = tab_create()
 tab_write(strings,target_file)
 #------------------------------------------------------------------------
 print('You start on the highest string')
@@ -207,17 +216,16 @@ print('"Done" to stop the program and translate the tabs')
 print('Not case sensitve =D')
 print()
 
-liststrings = [i for i in strings]
+list_of_strings = [i for i in strings]
+num_strings = len(list_of_strings)
 stringptr = 0
 
-
 while True:
-  print('Current string:', liststrings[stringptr])
+  print('Current string:', list_of_strings[stringptr])
   fret = input('Fret ').upper()
   print()
   if fret == "DONE":
     break
-  #if len(fret) == 0: break   
     
   if fret in ("U","UP"):
     if stringptr <= 0:
@@ -227,7 +235,7 @@ while True:
     continue
 
   if fret in ("D","DOWN"):
-    if stringptr >= numstr-1:
+    if stringptr >= num_strings-1:
       print("Can't go lower")
     else:
       stringptr += 1
@@ -275,7 +283,7 @@ while True:
   
 #-------------------------------------------------------------------------------
   # Use the multiplier
-  stringl = liststrings[stringptr]
+  stringl = list_of_strings[stringptr]
   for j in range(multi):              
     if fret == 'GAP':
       for i in strings:
