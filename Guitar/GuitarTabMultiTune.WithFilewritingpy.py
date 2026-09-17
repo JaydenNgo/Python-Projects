@@ -239,9 +239,10 @@ while True:
       if len(v) == 0:
         print("No values")
         break
-      v.append("-")
-      v.append("#")
-      v.append("-")
+      v += ["-","#","-"]
+      # v.append("-")
+      # v.append("#")
+      # v.append("-")
     print()
     print_tab(strings)
     continue
@@ -398,13 +399,13 @@ for i in range(sizediff+1):
     difflist.append(diff)
 
 #----------------------------------------------------------------
-  allfrets = set()
-  for newstring,diffs in zip(newtune,difflist):
+  all_frets = set()
+  for newstring, diffs in zip(newtune,difflist):
     frets = newtune[newstring]
     for index,note in enumerate(frets):
       if note.isdigit():
         new = int(note)+diffs
-        allfrets |= {new}
+        all_frets.add(new)
         if int(note) <= 9 and new > 9:
           for k,v in newtune.items():
             if k == newstring:
@@ -420,17 +421,13 @@ for i in range(sizediff+1):
   print()
   print()
   #-----------------------------------------------------------------------
-  #print(allfrets)
+  #print(all_frets)
   
-  alldouble = True
-  if len(allfrets) <= 0:
-    alldouble = False
-  for i in allfrets:
-    if i < 12:
-      alldouble = False
-      break
+  #sum(1 for num in all_frets if num >= 12) == len(all_frets)
+  all_two_digit = all(num >= 12 for num in all_frets)
+
   
-  if alldouble == True:
+  if all_two_digit:
     for newstring in newtune:
       frets = newtune[newstring]
       for index,note in enumerate(frets):

@@ -11,21 +11,21 @@ def speed(func, value):
   return output, end 
 
 def make_boxes():
-  a = [i for i in range(1,101)]
+  a = list(range(1,101))
   random.shuffle(a)
-  return {index+1:i for index,i in enumerate(a)}
+  return {index:i for index,i in enumerate(a,1)}
 
 def gen_boxes():
-  a = [i for i in range(1,101)]
+  a = list(range(1,101))
   while True:
     random.shuffle(a)
-    yield {index+1:i for index,i in enumerate(a)}
+    yield {index:i for index,i in enumerate(a,1)}
     
 
 def search(target, boxes):
   checked = []
   ntarget = target
-  for i in range(50):
+  for _ in range(50):
     opens = boxes[ntarget]
     if opens in checked:
       #print("Looped", i+1)
@@ -42,7 +42,7 @@ def search(target, boxes):
 
 def experiment(n):
   count = {"Succes":0, "Failed":0}
-  for j in range(n):
+  for _ in range(n):
     boxes = make_boxes()
     for i in range(1,101):
       if search(i,boxes) != 1:
