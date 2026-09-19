@@ -20,7 +20,7 @@ def shift(note, n):
 # returns standard tuning for n strings (4-7)
 def standards(n):
     standard = ['B','E', 'A', 'D', 'G', 'B', 'E']
-    if n == 4:     return standard[1:5]
+    if   n == 4: return standard[1:5]
     elif n == 5: return standard[:5]
     elif n == 6: return standard[1:7]
     elif n == 7: return standard
@@ -40,7 +40,7 @@ def tuning(root,version,numstr):
 
 # Allows user to input tuning for tab
 # Returns dictionary: 
-# Key    =    each note
+# Key = each note
 # Value = empty list
 def add_strings():
     strings = {}
