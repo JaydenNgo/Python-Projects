@@ -283,8 +283,8 @@ def add_to_tab(strings):
                     else:
                         strings[i].append('-')
                     strings[i].append('-')
-    print_tab(strings)
-    print()
+        print_tab(strings)
+        print()
     return strings
 
 def string_empty(n):
