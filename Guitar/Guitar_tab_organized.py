@@ -11,15 +11,15 @@
 #also with cursor
 
 
-conv = {'A':0, 'A#':1, 'B':2, 'C':3, 'C#':4, 'D':5, 'D#':6, 'E':7, 'F':8, 'F#':9, 'G':10, 'G#':11}
-rconv = {v:k for k,v in conv.items()}
+conversion = {'A':0, 'A#':1, 'B':2, 'C':3, 'C#':4, 'D':5, 'D#':6, 'E':7, 'F':8, 'F#':9, 'G':10, 'G#':11}
+rconv = {v:k for k,v in conversion.items()}
 
 # Returns a note shifted up n semitones
-def shift(note, n):
-    return rconv[(conv[note]+n)%12]
+def shift(note: str, n: int):
+    return rconv[(conversion[note]+n) % 12]
 
 # returns standard tuning for n strings (4-7)
-def standards(n):
+def standards(n: int):
     standard = ['B','E', 'A', 'D', 'G', 'B', 'E']
     if   n == 4: return standard[1:5]
     elif n == 5: return standard[:5]
@@ -27,13 +27,13 @@ def standards(n):
     elif n == 7: return standard
 
 # Returns drop or standard tuning depending on root note and # of strings
-def tuning(root,version,numstr):
-    standard = standards(numstr)
-    diff = conv[root] - conv[standard[0]]
-    if version == 'standard':
+def tuning(root: str, version: str, num_strings: int):
+    standard = standards(num_strings)
+    diff = conversion[root] - conversion[standard[0]]
+    if version == "standard":
         d = [shift(i,diff) for i in standard]
 
-    elif version == 'drop':
+    elif version == "drop":
         d = [shift(i,diff+2) for i in standard]
         d[0] = root
         
@@ -60,7 +60,7 @@ def add_strings():
                     continue
                 mode = 'drop'
                 note = y[spaces[0]+1:spaces[1]]
-                numstr = y[spaces[1]+1:]
+                num_strings = y[spaces[1]+1:]
 
             #Standard Tuning
             if 'STANDARD' in y:
@@ -70,21 +70,21 @@ def add_strings():
                 loc_note = y.index('STANDARD')
                 mode = 'standard'
                 note = y[:loc_note-1]
-                numstr = y[loc_note+9:]
+                num_strings = y[loc_note+9:]
         
             #Error Checking
-            if int(numstr) > 7:
+            if int(num_strings) > 7:
                 print("Too many strings\n")
                 continue
-            if note not in conv:
+            if note not in conversion:
                 print("Invalid tuning")
                 continue
-            if numstr.isdigit() == False:
+            if num_strings.isdigit() == False:
                 print("Missing number of strings")
                 continue
             else:
-                numstr = int(numstr)
-                for i in tuning(note,mode,numstr)[::-1]:
+                num_strings = int(num_strings)
+                for i in tuning(note,mode,num_strings)[::-1]:
                     if i in strings:
                         strings[i[0]+i] = []    #If open string note shows up multiple times
                     else:
@@ -97,7 +97,7 @@ def add_strings():
         if y in strings:
             print('Already added')
             continue
-        if y in conv:
+        if y in conversion:
             pass
         elif y[-1:] in strings and y[-2] == y[-1]:
             pass
@@ -124,10 +124,10 @@ def get_tuning():
             continue
 
 #Get notes for calculation
-def true_note(strings):
+def true_notes(strings: dict):
     notes = []
     for string in strings:
-        if string[-1] in conv:
+        if string[-1] in conversion:
             notes.append(string[-1])
         elif string[-1] == '#':
             notes.append(string[-2:])
@@ -136,13 +136,13 @@ def true_note(strings):
     return notes
 
 # Print out tab
-def print_tab(strings):
+def print_tab(strings: dict):
     for string, notes in strings.items():
         print(f'{string:4}{"".join(notes)}')
     print("\n")
 
 #Clear file
-def tab_create():
+def create_tab():
     file_name = input("Give this tab a name \n")
     target_file = f"tabs/{file_name}.txt"
     with open(target_file, "w") as file:
@@ -151,7 +151,7 @@ def tab_create():
         print()
     return target_file
 
-def tab_write(strings,file_name):
+def write_to_tab(strings: dict, file_name: str):
     #Create a copy
     cstrings = {k:[i for i in v] for k,v in strings.items()}
     for i in cstrings:
@@ -177,9 +177,9 @@ def tab_write(strings,file_name):
             file.write("\n")
         file.write("\n")
 
-def add_to_tab(strings):
+def add_to_tab(strings: dict ):
     list_of_strings = [i for i in strings]
-    numstr = len(list_of_strings)
+    num_strings = len(list_of_strings)
     stringptr = 0
 
     while True:
@@ -198,7 +198,7 @@ def add_to_tab(strings):
             continue
 
         if fret in ("D","DOWN"):
-            if stringptr >= numstr-1:
+            if stringptr >= num_strings-1:
                 print("Can't go lower")
             else:
                 stringptr += 1
@@ -287,23 +287,24 @@ def add_to_tab(strings):
         print()
     return strings
 
-def string_empty(n):
-    for i in n:
+def string_is_empty(notes: list):    
+    for i in notes:
         if i not in ('-','--','#'):
             return False
     return True
 
-#Remove strings that aren't used
-def cut_tab(a):
-    to_cut = [k for k,v in a.items() if string_empty(v)]
+# removes strings that aren't used
+# returns whether strings were cut or not
+def cut_tab(strings: dict):
+    to_cut = [k for k,v in strings.items() if string_is_empty(v)]
   
     if len(to_cut) > 0:
         for i in to_cut:
-            del a[i]
+            del strings[i]
         return True
     return False
 
-def get_new_tuning(og_strings):
+def get_new_tuning(og_strings: dict):
     while True:
         new_tuning = add_strings()
         print()
@@ -315,22 +316,25 @@ def get_new_tuning(og_strings):
         print()
         reset = input('Confirm (Y/N) ').upper()
         if reset in ("Y","YES"):
-            return new_tuning
+            return list(new_tuning)
         else:
             continue
 
-def translate(og_strings, new_tuning):
+def translate(og_strings: dict, new_tuning: list):
     #For each subtuning
     print_tab(og_strings)
-    size_diff = len(new_tuning)-len(og_strings)
+    num_strings = len(og_strings)
+    size_diff = len(new_tuning) - num_strings
 
     for i in range(size_diff+1):
-        sub_tuning = list(new_tuning)[i:i+len(og_strings)]
+        print(new_tuning)
+        sub_tuning = new_tuning[i:i+num_strings]
         print(sub_tuning)
 
         new_strings = {j:[] for j in sub_tuning}
-        newtune_notes = true_note(new_strings)
+        newtune_notes = true_notes(new_strings)
 
+        # Clones tab w/ new tuning names
         for x,y in zip(og_strings, new_strings):
             new_strings[y] = [k for k in og_strings[x]]
     
@@ -340,7 +344,7 @@ def translate(og_strings, new_tuning):
         #Find the distances between each string
         diff_list = []
         for x,y in zip(strings_notes, newtune_notes):
-            diff = conv[x]-conv[y]
+            diff = conversion[x]-conversion[y]
             if diff < 0:
                 diff += 12
             diff_list.append(diff)
@@ -360,11 +364,11 @@ def translate(og_strings, new_tuning):
                             else:
                                 v[index] = '--'
                     frets[index] = str(new)
-    
+                    
         print()
         print('New Tab')
         print_tab(new_strings)
-        tab_write(new_strings, target_file)
+        write_to_tab(new_strings, target_file)
         print()
         print()
     #-----------------------------------------------------------------------
@@ -389,7 +393,7 @@ def translate(og_strings, new_tuning):
         print()
         print('Shifted Down 12, Lower Octave')
         print_tab(new_strings)
-        tab_write(new_strings,target_file)
+        write_to_tab(new_strings,target_file)
         for i in range(4):
             print()
 
@@ -401,14 +405,14 @@ print('You can also type presets like "Drop G 7" or "E Standard 6"')
 print()
 
 strings = get_tuning()
-strings_notes = true_note(strings)
+strings_notes = true_notes(strings)
 print()
 
 print('Original Tuning')
 print_tab(strings)
 
-target_file = tab_create()
-tab_write(strings,target_file)
+target_file = create_tab()
+write_to_tab(strings, target_file)
 
 
 print('You start on the highest string')
@@ -429,12 +433,12 @@ print('Original Tab')
 print_tab(strings)
 print()
   
-# Cut tabs, if strings removed return True
+# Cut out strings that aren't used
 if cut_tab(strings):
     print()
     print("Cut strings")
     print_tab(strings)
-    tab_write(strings, target_file)
+    write_to_tab(strings, target_file)
 
 print('\nPlease add the New tuning\n')
 new_tuning = get_new_tuning(strings)

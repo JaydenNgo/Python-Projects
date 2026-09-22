@@ -170,9 +170,9 @@ def tab_create():
     file_name = input("Give this tab a name \n")
     target_file = f"{file_name}.txt"
     with open(target_file, "w") as file:
-            file.write(file_name)
-            file.write(" Tabs \n\n")
-            print()
+        file.write(file_name)
+        file.write(" Tabs \n\n")
+        print()
     return target_file
 
 def tab_write(strings,file_name):
