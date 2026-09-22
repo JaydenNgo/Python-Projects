@@ -31,13 +31,13 @@ def tuning(root: str, version: str, num_strings: int):
     standard = standards(num_strings)
     diff = conversion[root] - conversion[standard[0]]
     if version == "standard":
-        d = [shift(i,diff) for i in standard]
+        tune = [shift(i,diff) for i in standard]
 
     elif version == "drop":
-        d = [shift(i,diff+2) for i in standard]
-        d[0] = root
+        tune = [shift(i,diff+2) for i in standard]
+        tune[0] = root
         
-    return d
+    return tune
 
 # Allows user to input tuning for tab
 # Returns dictionary: 
@@ -177,31 +177,32 @@ def write_to_tab(strings: dict, file_name: str):
             file.write("\n")
         file.write("\n")
 
-def add_to_tab(strings: dict ):
+def get_input_for_tab(strings: dict):
     list_of_strings = [i for i in strings]
     num_strings = len(list_of_strings)
-    stringptr = 0
+    string_ptr = 0
 
     while True:
-        print('Current string:', list_of_strings[stringptr])
+        target_string = list_of_strings[string_ptr]
+        print(f"Current string: {target_string}")
         fret = input('Fret ').upper()
         print()
+
         if fret == "DONE":
             break
-        #if len(fret) == 0: break   
         
         if fret in ("U","UP"):
-            if stringptr <= 0:
+            if string_ptr <= 0:
                 print("Can't go higher")
             else:
-                stringptr -= 1
+                string_ptr -= 1
             continue
 
         if fret in ("D","DOWN"):
-            if stringptr >= num_strings-1:
+            if string_ptr >= num_strings-1:
                 print("Can't go lower")
             else:
-                stringptr += 1
+                string_ptr += 1
             continue
     
         if fret in ("SPLIT","BREAK"):
@@ -217,20 +218,21 @@ def add_to_tab(strings: dict ):
 
         #Retrieve Multiplier
         fret = list(fret)
-        multi = 1
+        multiplier = 1
         if 'X' in fret:
             find_x = fret.index('X')
-            multi = fret[find_x+1:]
-            if len(multi) <= 0:
+            multiplier = fret[find_x+1:]
+            if len(multiplier) <= 0:
                 print('Invalid multiplier')
                 continue
-            multi = int("".join(multi))
+            multiplier = int("".join(multiplier))
             del fret[find_x:]
         fret = "".join(fret)
 
         # Allow gapx3 and undox3
         if fret in ("GAP","UNDO"):
             pass
+
         #Error Catching
         elif fret.isdigit():
             fret = int(fret)
@@ -241,36 +243,39 @@ def add_to_tab(strings: dict ):
             print('Not a number')
             continue
     
-        # Use the multiplier
-        target_string = list_of_strings[stringptr]
-        for _ in range(multi):              
-            if fret == 'GAP':
-                for i in strings:
-                    strings[i].append('-')
+        add_to_tab(strings, target_string, multiplier, fret)
+    return strings
 
-            elif fret == 'UNDO':
-                rep = 1
-                for v in strings.values():
-                    if len(v) <= 0:
-                        print("No more tab left \n")
-                        rep = 0                   #Flag error
-                        break
-                if rep <= 0: 
+def add_to_tab(strings: dict, target_string: str, multiplier: int, fret): 
+    # Use the multiplier
+    for _ in range(multiplier):              
+        if fret == 'GAP':
+            for i in strings:
+                strings[i].append('-')
+
+        elif fret == 'UNDO':
+            repeats = 1
+            for v in strings.values():
+                if len(v) <= 0:
+                    print("No more tab left \n")
+                    repeats = 0                   #Flag error
+                    break
+            if repeats <= 0: 
+                break
+    
+            # If last entry is number and buffer, delete 2
+            for v in strings.values():
+                if v[-2].isdigit(): 
+                    repeats = 2 
                     break
         
-                # If last entry is number and buffer, delete 2
+            for i in range(repeats):
                 for v in strings.values():
-                    if v[-2].isdigit(): 
-                        rep = 2 
+                    if len(v) <= 0: 
                         break
-            
-                for i in range(rep):
-                    for v in strings.values():
-                        if len(v) <= 0: 
-                            break
-                        else: 
-                            del v[-1] 
-        
+                    else: 
+                        del v[-1] 
+    
         #Add to tab
         else:
             for i in strings:
@@ -283,11 +288,12 @@ def add_to_tab(strings: dict ):
                     else:
                         strings[i].append('-')
                     strings[i].append('-')
-        print_tab(strings)
-        print()
+
+    print_tab(strings)
+    print()
     return strings
 
-def string_is_empty(notes: list):    
+def string_is_empty(notes: list[str]):    
     for i in notes:
         if i not in ('-','--','#'):
             return False
@@ -320,14 +326,14 @@ def get_new_tuning(og_strings: dict):
         else:
             continue
 
-def translate(og_strings: dict, new_tuning: list):
+def translate(og_strings: dict, new_tuning: list[str]):
     #For each subtuning
     print_tab(og_strings)
     num_strings = len(og_strings)
     size_diff = len(new_tuning) - num_strings
 
     for i in range(size_diff+1):
-        print(new_tuning)
+        #print(new_tuning)
         sub_tuning = new_tuning[i:i+num_strings]
         print(sub_tuning)
 
@@ -337,9 +343,6 @@ def translate(og_strings: dict, new_tuning: list):
         # Clones tab w/ new tuning names
         for x,y in zip(og_strings, new_strings):
             new_strings[y] = [k for k in og_strings[x]]
-    
-        #print("New"); tab(new_strings)
-        #print("OG"); tab(stog_stringsrings)
 
         #Find the distances between each string
         diff_list = []
@@ -349,54 +352,59 @@ def translate(og_strings: dict, new_tuning: list):
                 diff += 12
             diff_list.append(diff)
 
-        all_frets = set()
-        for newstring, diffs in zip(new_strings, diff_list):
-            frets = new_strings[newstring]
-            for index, note in enumerate(frets):
-                if note.isdigit():
-                    new = int(note)+diffs
-                    all_frets.add(new)
-                    # if single digit -> double digit
-                    if int(note) <= 9 and new > 9:
-                        for k,v in new_strings.items():
-                            if k == newstring:
-                                pass
-                            else:
-                                v[index] = '--'
-                    frets[index] = str(new)
-                    
-        print()
-        print('New Tab')
-        print_tab(new_strings)
-        write_to_tab(new_strings, target_file)
-        print()
-        print()
-    #-----------------------------------------------------------------------
-        #print(all_frets)
-        
-        # If all frets are 12+, also show lower on the fretboard
-        all_two_digit = all(num >= 12 for num in all_frets)
-        if all_two_digit:
-            for newstring in new_strings:
-                frets = new_strings[newstring]
-                for index,note in enumerate(frets):
-                    if note.isdigit():
-                        new = int(note)-12
-                        frets[index] = str(new)
-                        if new < 10:
-                            for k,v in new_strings.items():
-                                if k == newstring:
-                                    pass
-                                else:
-                                    v[index] = '-'
-        
-        print()
-        print('Shifted Down 12, Lower Octave')
-        print_tab(new_strings)
-        write_to_tab(new_strings,target_file)
-        for i in range(4):
-            print()
+        # Translate the subtuning
+        all_frets = sub_translate(new_strings, diff_list)
 
+        # If all frets are 12+, also show lower on the fretboard
+        if all(num >= 12 for num in all_frets):
+            down_an_octave(new_strings)
+        
+
+def sub_translate(new_strings: dict, diff_list: list[str]):
+    all_frets = set()
+    for newstring, diffs in zip(new_strings, diff_list):
+        frets = new_strings[newstring]
+        for index, note in enumerate(frets):
+            if note.isdigit():
+                new = int(note)+diffs
+                all_frets.add(new)
+                # if single digit -> double digit
+                if int(note) <= 9 and new > 9:
+                    for k,v in new_strings.items():
+                        if k == newstring:
+                            pass
+                        else:
+                            v[index] = '--'
+                frets[index] = str(new)
+    print()
+    print('New Tab')
+    print_tab(new_strings)
+    write_to_tab(new_strings, target_file)
+    print("\n")
+    
+    return all_frets
+
+def down_an_octave(new_strings: dict):
+    # If all frets are 12+, also show lower on the fretboard
+    for newstring in new_strings:
+        frets = new_strings[newstring]
+        for index,note in enumerate(frets):
+            if note.isdigit():
+                new = int(note)-12
+                frets[index] = str(new)
+                if new < 10:
+                    for k,v in new_strings.items():
+                        if k == newstring:
+                            pass
+                        else:
+                            v[index] = '-'
+    print()
+    print('Shifted Down 12, Lower Octave')
+    print_tab(new_strings)
+    write_to_tab(new_strings,target_file)
+    print("\n\n\n")
+
+    return None
 #------------------------------------------------------------------------------------
 print()
 print('Input strings from Highest to Lowest')
@@ -427,7 +435,8 @@ print('Not case sensitve =D')
 print()
 
 
-add_to_tab(strings)
+get_input_for_tab(strings)
+# Many inputs later
 print()
 print('Original Tab')
 print_tab(strings)
