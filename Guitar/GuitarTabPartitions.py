@@ -1,12 +1,9 @@
 #TO DO
 #Add restart
-#Add title to display and file
 #Check out to the Hellfire chorus
 #Check why DT Winter isnt showing more subtunings
-#Add sub sections
 #Add chords
 
-#Arrow so you know which line?
 #Insertion and deletion in the middle of the tab
 #also with cursor
 
@@ -31,17 +28,17 @@ def tuning(root: str, version: str, num_strings: int):
     standard = standards(num_strings)
     diff = conversion[root] - conversion[standard[0]]
     if version == "standard":
-        d = [shift(i,diff) for i in standard]
+        tune = [shift(i,diff) for i in standard]
 
     elif version == "drop":
-        d = [shift(i,diff+2) for i in standard]
-        d[0] = root
+        tune = [shift(i,diff+2) for i in standard]
+        tune[0] = root
         
-    return d
+    return tune
 
 # Allows user to input tuning for tab
 # Returns dictionary: 
-# Key = each note
+# Key  =  each note
 # Value = empty list
 def add_strings():
     strings = {}
@@ -119,9 +116,8 @@ def get_tuning():
         print()
         reset = input('Confirm (Y/N) ').upper()
         if reset in ("Y","YES"):
-            return strings
-        else:
-            continue
+            return [strings]
+        continue
 
 #Get notes for calculation
 def true_notes(strings: dict):
@@ -136,13 +132,17 @@ def true_notes(strings: dict):
     return notes
 
 # Print out tab
-def print_tab(strings: dict):
+def print_tab(strings: dict, current_string: str = None):
     for string, notes in strings.items():
-        print(f'{string:4}{"".join(notes)}')
+        print(f'{string:4}{"".join(notes)}', end = '')
+        if string == current_string:
+            print(" <--")
+        else:
+            print()
     print("\n")
 
-#Clear file
-def create_tab():
+#Initialize tab file
+def create_tab_file():
     file_name = input("Give this tab a name \n")
     target_file = f"tabs/{file_name}.txt"
     with open(target_file, "w") as file:
@@ -151,7 +151,7 @@ def create_tab():
         print()
     return target_file
 
-def write_to_tab(strings: dict, file_name: str):
+def write_to_tab_file(strings: dict, file_name: str):
     #Create a copy
     cstrings = {k:[i for i in v] for k,v in strings.items()}
     for i in cstrings:
@@ -177,60 +177,93 @@ def write_to_tab(strings: dict, file_name: str):
             file.write("\n")
         file.write("\n")
 
-def add_to_tab(strings: dict ):
+
+def get_input_for_fulltab(tabs = list[dict]):
+    segment_ptr = 0
+    current_subtab = tabs[segment_ptr]
+    tuning = list(current_subtab)
+    while True:
+        inp = get_input_for_subtab(current_subtab)
+        if inp == "Done":
+            break
+        if inp == "Split":
+            tabs.append({string:[] for string in tuning})
+            segment_ptr = len(tabs)-1
+            current_subtab = tabs[segment_ptr]
+            print_tab(current_subtab)
+
+    full_tab = {string:[] for string in tuning}
+    for subtab in tabs:
+        for string, frets in subtab.items():
+            full_tab[string] += frets
+    print_tab(full_tab)
+    #Add check for if they like full tab
+    
+    return full_tab
+
+        
+
+
+def get_input_for_subtab(strings: dict):
     list_of_strings = [i for i in strings]
     num_strings = len(list_of_strings)
-    stringptr = 0
+    string_ptr = 0
 
     while True:
-        print('Current string:', list_of_strings[stringptr])
+        target_string = list_of_strings[string_ptr]
+        print_tab(strings, target_string)
+        print(f"Current string: {target_string}")
         fret = input('Fret ').upper()
         print()
+
         if fret == "DONE":
-            break
-        #if len(fret) == 0: break   
+            return "Done"
         
         if fret in ("U","UP"):
-            if stringptr <= 0:
+            if string_ptr <= 0:
                 print("Can't go higher")
             else:
-                stringptr -= 1
+                string_ptr -= 1
+                
             continue
 
         if fret in ("D","DOWN"):
-            if stringptr >= num_strings-1:
+            if string_ptr >= num_strings-1:
                 print("Can't go lower")
             else:
-                stringptr += 1
+                string_ptr += 1
             continue
     
         if fret in ("SPLIT","BREAK"):
             #Add minimum split size
             for v in strings.values():
                 if len(v) == 0:
-                    print("No values")
+                    print("No values to split")
                     break
                 v += ["-","#","-"]
             print()
-            print_tab(strings)
-            continue
+            print_tab(strings, target_string)
+            return "Split"
+
+        
 
         #Retrieve Multiplier
         fret = list(fret)
-        multi = 1
+        multiplier = 1
         if 'X' in fret:
             find_x = fret.index('X')
-            multi = fret[find_x+1:]
-            if len(multi) <= 0:
+            multiplier = fret[find_x+1:]
+            if len(multiplier) <= 0:
                 print('Invalid multiplier')
                 continue
-            multi = int("".join(multi))
+            multiplier = int("".join(multiplier))
             del fret[find_x:]
         fret = "".join(fret)
 
         # Allow gapx3 and undox3
         if fret in ("GAP","UNDO"):
             pass
+
         #Error Catching
         elif fret.isdigit():
             fret = int(fret)
@@ -240,54 +273,59 @@ def add_to_tab(strings: dict ):
         else:
             print('Not a number')
             continue
-    
-        # Use the multiplier
-        target_string = list_of_strings[stringptr]
-        for _ in range(multi):              
+
+        # Add to Tab ------------------------------
+        for _ in range(multiplier):              
             if fret == 'GAP':
                 for i in strings:
                     strings[i].append('-')
-
+    
             elif fret == 'UNDO':
-                rep = 1
+                repeats = 1
                 for v in strings.values():
                     if len(v) <= 0:
                         print("No more tab left \n")
-                        rep = 0                   #Flag error
+                        repeats = 0                   #Flag error
                         break
-                if rep <= 0: 
+                if repeats <= 0: 
                     break
         
                 # If last entry is number and buffer, delete 2
                 for v in strings.values():
                     if v[-2].isdigit(): 
-                        rep = 2 
+                        repeats = 2 
                         break
             
-                for i in range(rep):
+                for i in range(repeats):
                     for v in strings.values():
                         if len(v) <= 0: 
                             break
                         else: 
                             del v[-1] 
         
-        #Add to tab
-        else:
-            for i in strings:
-                if i == target_string:
-                    strings[target_string].append(str(fret))
-                    strings[target_string].append('-')
-                else:
-                    if fret > 9:
-                        strings[i].append('--')
+            #Add to tab
+            else:
+                for i in strings:
+                    if i == target_string:
+                        strings[target_string].append(str(fret))
+                        strings[target_string].append('-')
                     else:
+                        if fret > 9:
+                            strings[i].append('--')
+                        else:
+                            strings[i].append('-')
                         strings[i].append('-')
-                    strings[i].append('-')
-        print_tab(strings)
-        print()
-    return strings
+    
+        print_tab(strings, target_string)
+        print() 
+    
 
-def string_is_empty(notes: list):    
+
+
+
+
+
+def string_is_empty(notes: list[str]):    
     for i in notes:
         if i not in ('-','--','#'):
             return False
@@ -320,14 +358,15 @@ def get_new_tuning(og_strings: dict):
         else:
             continue
 
-def translate(og_strings: dict, new_tuning: list):
+def translate(og_strings: dict, new_tuning: list[str], target_file: str):
     #For each subtuning
     print_tab(og_strings)
     num_strings = len(og_strings)
     size_diff = len(new_tuning) - num_strings
+    strings_notes = true_notes(og_strings)
 
     for i in range(size_diff+1):
-        print(new_tuning)
+        #print(new_tuning)
         sub_tuning = new_tuning[i:i+num_strings]
         print(sub_tuning)
 
@@ -337,9 +376,6 @@ def translate(og_strings: dict, new_tuning: list):
         # Clones tab w/ new tuning names
         for x,y in zip(og_strings, new_strings):
             new_strings[y] = [k for k in og_strings[x]]
-    
-        #print("New"); tab(new_strings)
-        #print("OG"); tab(stog_stringsrings)
 
         #Find the distances between each string
         diff_list = []
@@ -349,54 +385,59 @@ def translate(og_strings: dict, new_tuning: list):
                 diff += 12
             diff_list.append(diff)
 
-        all_frets = set()
-        for newstring, diffs in zip(new_strings, diff_list):
-            frets = new_strings[newstring]
-            for index, note in enumerate(frets):
-                if note.isdigit():
-                    new = int(note)+diffs
-                    all_frets.add(new)
-                    # if single digit -> double digit
-                    if int(note) <= 9 and new > 9:
-                        for k,v in new_strings.items():
-                            if k == newstring:
-                                pass
-                            else:
-                                v[index] = '--'
-                    frets[index] = str(new)
-                    
-        print()
-        print('New Tab')
-        print_tab(new_strings)
-        write_to_tab(new_strings, target_file)
-        print()
-        print()
-    #-----------------------------------------------------------------------
-        #print(all_frets)
-        
-        # If all frets are 12+, also show lower on the fretboard
-        all_two_digit = all(num >= 12 for num in all_frets)
-        if all_two_digit:
-            for newstring in new_strings:
-                frets = new_strings[newstring]
-                for index,note in enumerate(frets):
-                    if note.isdigit():
-                        new = int(note)-12
-                        frets[index] = str(new)
-                        if new < 10:
-                            for k,v in new_strings.items():
-                                if k == newstring:
-                                    pass
-                                else:
-                                    v[index] = '-'
-        
-        print()
-        print('Shifted Down 12, Lower Octave')
-        print_tab(new_strings)
-        write_to_tab(new_strings,target_file)
-        for i in range(4):
-            print()
+        # Translate the subtuning
+        all_frets = sub_translate(new_strings, diff_list, target_file)
 
+        # If all frets are 12+, also show lower on the fretboard
+        if all(num >= 12 for num in all_frets):
+            down_an_octave(new_strings, target_file)
+        
+
+def sub_translate(new_strings: dict, diff_list: list[str], target_file: str):
+    all_frets = set()
+    for newstring, diffs in zip(new_strings, diff_list):
+        frets = new_strings[newstring]
+        for index, note in enumerate(frets):
+            if note.isdigit():
+                new = int(note)+diffs
+                all_frets.add(new)
+                # if single digit -> double digit
+                if int(note) <= 9 and new > 9:
+                    for k,v in new_strings.items():
+                        if k == newstring:
+                            pass
+                        else:
+                            v[index] = '--'
+                frets[index] = str(new)
+    print()
+    print('New Tab')
+    print_tab(new_strings)
+    write_to_tab_file(new_strings, target_file)
+    print("\n")
+    
+    return all_frets
+
+def down_an_octave(new_strings: dict, target_file: str):
+    # If all frets are 12+, also show lower on the fretboard
+    for newstring in new_strings:
+        frets = new_strings[newstring]
+        for index,note in enumerate(frets):
+            if note.isdigit():
+                new = int(note)-12
+                frets[index] = str(new)
+                if new < 10:
+                    for k,v in new_strings.items():
+                        if k == newstring:
+                            pass
+                        else:
+                            v[index] = '-'
+    print()
+    print('Shifted Down 12, Lower Octave')
+    print_tab(new_strings)
+    write_to_tab_file(new_strings,target_file)
+    print("\n\n\n")
+
+    return None
 #------------------------------------------------------------------------------------
 print()
 print('Input strings from Highest to Lowest')
@@ -405,14 +446,13 @@ print('You can also type presets like "Drop G 7" or "E Standard 6"')
 print()
 
 strings = get_tuning()
-strings_notes = true_notes(strings)
 print()
 
 print('Original Tuning')
-print_tab(strings)
+print_tab(strings[0])
 
-target_file = create_tab()
-write_to_tab(strings, target_file)
+target_file = create_tab_file()
+write_to_tab_file(strings[0], target_file)
 
 
 print('You start on the highest string')
@@ -427,25 +467,26 @@ print('Not case sensitve =D')
 print()
 
 
-add_to_tab(strings)
+full_strings = get_input_for_fulltab(strings)
+# Many inputs later
 print()
 print('Original Tab')
-print_tab(strings)
+print_tab(full_strings)
 print()
   
 # Cut out strings that aren't used
-if cut_tab(strings):
+if cut_tab(full_strings):
     print()
     print("Cut strings")
-    print_tab(strings)
-    write_to_tab(strings, target_file)
+    print_tab(full_strings)
+    write_to_tab_file(full_strings, target_file)
 
 print('\nPlease add the New tuning\n')
-new_tuning = get_new_tuning(strings)
+new_tuning = get_new_tuning(full_strings)
 
 print("\n\n\n")
 print("TRANSLATION\n")
 
-translate(strings, new_tuning)
+translate(full_strings, new_tuning, target_file)
 print("Done")
   

@@ -142,7 +142,7 @@ def print_tab(strings: dict):
     print("\n")
 
 #Clear file
-def create_tab():
+def create_tab_file():
     file_name = input("Give this tab a name \n")
     target_file = f"tabs/{file_name}.txt"
     with open(target_file, "w") as file:
@@ -151,7 +151,7 @@ def create_tab():
         print()
     return target_file
 
-def write_to_tab(strings: dict, file_name: str):
+def write_to_tab_file(strings: dict, file_name: str):
     #Create a copy
     cstrings = {k:[i for i in v] for k,v in strings.items()}
     for i in cstrings:
@@ -379,7 +379,7 @@ def sub_translate(new_strings: dict, diff_list: list[str]):
     print()
     print('New Tab')
     print_tab(new_strings)
-    write_to_tab(new_strings, target_file)
+    write_to_tab_file(new_strings, target_file)
     print("\n")
     
     return all_frets
@@ -401,7 +401,7 @@ def down_an_octave(new_strings: dict):
     print()
     print('Shifted Down 12, Lower Octave')
     print_tab(new_strings)
-    write_to_tab(new_strings,target_file)
+    write_to_tab_file(new_strings,target_file)
     print("\n\n\n")
 
     return None
@@ -419,8 +419,8 @@ print()
 print('Original Tuning')
 print_tab(strings)
 
-target_file = create_tab()
-write_to_tab(strings, target_file)
+target_file = create_tab_file()
+write_to_tab_file(strings, target_file)
 
 
 print('You start on the highest string')
@@ -447,7 +447,7 @@ if cut_tab(strings):
     print()
     print("Cut strings")
     print_tab(strings)
-    write_to_tab(strings, target_file)
+    write_to_tab_file(strings, target_file)
 
 print('\nPlease add the New tuning\n')
 new_tuning = get_new_tuning(strings)
