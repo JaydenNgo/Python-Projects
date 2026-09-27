@@ -186,11 +186,21 @@ def get_input_for_fulltab(tabs = list[dict]):
         inp = get_input_for_subtab(current_subtab)
         if inp == "Done":
             break
+
         if inp == "Split":
             tabs.append({string:[] for string in tuning})
             segment_ptr = len(tabs)-1
             current_subtab = tabs[segment_ptr]
-            print_tab(current_subtab)
+            #print_tab(current_subtab)
+
+        if isinstance(inp, int):
+            if not (1 <= inp <= len(tabs)):
+                print(f"Segment does not exist, try {1}-{len(tabs)}!")
+                continue
+            segment_ptr = inp-1
+            current_subtab = tabs[segment_ptr]
+            #print_tab(current_subtab)
+
 
     full_tab = {string:[] for string in tuning}
     for subtab in tabs:
@@ -200,8 +210,6 @@ def get_input_for_fulltab(tabs = list[dict]):
     #Add check for if they like full tab
     
     return full_tab
-
-        
 
 
 def get_input_for_subtab(strings: dict):
@@ -244,6 +252,14 @@ def get_input_for_subtab(strings: dict):
             print()
             print_tab(strings, target_string)
             return "Split"
+
+        if fret[:9] == "SWITCH TO":
+            target_segment = fret[9:].strip()
+            if target_segment.isdigit():
+                return int(target_segment)
+            else:
+                print("Not a segment number")
+                continue
 
         
 
@@ -462,6 +478,7 @@ print('If you want to do multiple of the same note do (12x4)')
 print('"Gap" if you want to make spaces between notes (gapx3)')
 print('"Undo" to remove the latest note (undox3)')
 print('"Break" to create segments in the tabs')
+print('"Switch to n" to move between segment n')
 print('"Done" to stop the program and translate the tabs')
 print('Not case sensitve =D')
 print()
