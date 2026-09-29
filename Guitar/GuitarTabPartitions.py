@@ -7,7 +7,8 @@
 # Insertion and deletion in the middle of the tab
 # also with cursor
 # Keep or remove the # lines for break ?
-
+# add f 12 for quick and easy additions
+# should I add strip for certain things?
 
 conversion = {'A':0, 'A#':1, 'B':2, 'C':3, 'C#':4, 'D':5, 'D#':6, 'E':7, 'F':8, 'F#':9, 'G':10, 'G#':11}
 rconv = {v:k for k,v in conversion.items()}
@@ -270,17 +271,24 @@ def get_input_for_subtab(strings: dict):
         
 
         #Retrieve Multiplier
-        fret = list(fret)
+        
         multiplier = 1
         if 'X' in fret:
-            find_x = fret.index('X')
-            multiplier = fret[find_x+1:]
-            if len(multiplier) <= 0:
-                print('Invalid multiplier')
+            print(fret.split("X"))
+            if len(fret.split("X")) != 2:
+                print("Too many inputs")
                 continue
-            multiplier = int("".join(multiplier))
-            del fret[find_x:]
-        fret = "".join(fret)
+
+            fret, multiplier = fret.split("X")
+            print(multiplier, multiplier.isdigit())
+            if not multiplier.isdigit():
+                print("Invalid multiplier")
+                continue
+            multiplier = int(multiplier)
+            if multiplier <= 0:
+                print("Please have a positive multiplier")
+                continue
+
 
         # Allow gapx3 and undox3
         if fret in ("GAP","UNDO"):
