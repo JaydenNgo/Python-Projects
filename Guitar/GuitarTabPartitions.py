@@ -1,11 +1,12 @@
-#TO DO
-#Add restart
-#Check out to the Hellfire chorus
-#Check why DT Winter isnt showing more subtunings
-#Add chords
+# TO DO
+# Add restart
+# Check out to the Hellfire chorus
+# Check why DT Winter isnt showing more subtunings
+# Add chords
 
-#Insertion and deletion in the middle of the tab
-#also with cursor
+# Insertion and deletion in the middle of the tab
+# also with cursor
+# Keep or remove the # lines for break ?
 
 
 conversion = {'A':0, 'A#':1, 'B':2, 'C':3, 'C#':4, 'D':5, 'D#':6, 'E':7, 'F':8, 'F#':9, 'G':10, 'G#':11}
@@ -25,12 +26,13 @@ def standards(n: int):
 
 # Returns drop or standard tuning depending on root note and # of strings
 def tuning(root: str, version: str, num_strings: int):
+
     standard = standards(num_strings)
     diff = conversion[root] - conversion[standard[0]]
-    if version == "standard":
+    if version == "STANDARD":
         tune = [shift(i,diff) for i in standard]
 
-    elif version == "drop":
+    elif version == "DROP":
         tune = [shift(i,diff+2) for i in standard]
         tune[0] = root
         
@@ -45,43 +47,36 @@ def add_strings():
     while True:
         y = input('Add string: ').upper()
         if 'DROP' in y or 'STANDARD' in y:
-            spaces = [index for index,item in enumerate(y) if item == ' ']
-            if len(spaces) != 2:
+            inp = y.split()
+            if len(inp) != 3:
                 print("Invalid Tuning \n")
                 continue 
 
             #Drop tuning
             if 'DROP' in y:
-                if len(y) < 8:
-                    print("Missing value (Drop G 7)")
-                    continue
-                mode = 'drop'
-                note = y[spaces[0]+1:spaces[1]]
-                num_strings = y[spaces[1]+1:]
+                mode, note, num_strings = inp
 
             #Standard Tuning
             if 'STANDARD' in y:
-                if len(y) < 12:
-                    print("Missing value (E Standard 6)")
-                    continue
-                loc_note = y.index('STANDARD')
-                mode = 'standard'
-                note = y[:loc_note-1]
-                num_strings = y[loc_note+9:]
+                note, mode, num_strings = inp
         
             #Error Checking
+            if not num_strings.isdigit():
+                print("Missing number of strings")
+                continue
             if int(num_strings) > 7:
                 print("Too many strings\n")
                 continue
+            if int(num_strings) < 4:
+                print("Not enough strings\n")
+                continue
             if note not in conversion:
-                print("Invalid tuning")
+                print("Invalid note")
                 continue
-            if num_strings.isdigit() == False:
-                print("Missing number of strings")
-                continue
+            
             else:
                 num_strings = int(num_strings)
-                for i in tuning(note,mode,num_strings)[::-1]:
+                for i in tuning(note, mode, num_strings)[::-1]:
                     if i in strings:
                         strings[i[0]+i] = []    #If open string note shows up multiple times
                     else:
@@ -90,6 +85,9 @@ def add_strings():
 
         #Manually add Tuning
         if len(y) == 0:
+            if len(strings) == 0:
+                print("There are no strings, please add some :D")
+                continue
             break
         if y in strings:
             print('Already added')
@@ -104,6 +102,7 @@ def add_strings():
             print('Invalid string')
             continue
         strings[y] = []
+        print_tab(strings)
     return strings
 
 # Take user input Tuning and confirmation
@@ -201,9 +200,16 @@ def get_input_for_fulltab(tabs = list[dict]):
             current_subtab = tabs[segment_ptr]
             #print_tab(current_subtab)
 
-
+    print("\n\n\n")
+    print("-"*50)
     full_tab = {string:[] for string in tuning}
-    for subtab in tabs:
+    for count, subtab in enumerate(tabs,1):
+        print(f"Segment {count}:")
+        print_tab(subtab)
+        ask = input("continue? (Y/N)?").upper()
+        print()
+        if ask not in ("Y", "YES"):
+            return get_input_for_fulltab(tabs)
         for string, frets in subtab.items():
             full_tab[string] += frets
     print_tab(full_tab)
