@@ -18,27 +18,51 @@ drop g 7
 y
 Test
 
+
 """
 
-
+notes = ['A#', 'C#', 'D#', 'F#', 'G#', 'A', 'B', 'C', 'D', 'E', 'F', 'G']
 conversion = {'A':0, 'A#':1, 'B':2, 'C':3, 'C#':4, 'D':5, 'D#':6, 'E':7, 'F':8, 'F#':9, 'G':10, 'G#':11}
 rconv = {v:k for k,v in conversion.items()}
 
+# True for F#12
+# True for F#12x4
+# True for FF#12x4
+# False for GAP
 def string_contains_note(string:str):
-    for note in conversion:
+    for note in notes:
         if note in string:
-            return True
-    return False
+            ind = string.rindex(note)
+            fret = string[ind+1:]
+            print(ind,fret)
+            break
+    else:
+        return False
+    #print(fret[0].isdigit())
+    return fret[0].isdigit()
 
-# For explicit input like F#12x4
+# For explicit input like F#12x4              
 def extract_note(inp:str):
     for index, char in enumerate(inp):
         if char.isdigit():
             string, fret = inp[:index], inp[index:]
-            #print(index, string, fret)
+            print(index, string, fret)
             break
     return string, fret
 
+def print_options():
+    print('You start on the highest string \n'
+        'You can use "u"/"up" and "d"/"down" to traverse the strings \n'
+        'Then type the fret on the given string \n'
+        'If you want to do multiple of the same note do (12x4) \n'
+        "If you don't want to move between strings, you can also explicitly write the string (G12x4)\n \n"
+        '"Gap" if you want to make spaces between notes (gapx3) \n'
+        '"Undo" to remove the latest note (undox3) \n'
+        '"Break" to create segments in the tabs \n'
+        '"Switch to n" to move to segment n \n'
+        '"Done" to stop the program and translate the tabs \n'
+        '"Option" if you would like to see these options again \n'
+        'Not case sensitve =D \n')
 
 # Returns a note shifted up n semitones
 def shift(note: str, n: int):
@@ -68,7 +92,7 @@ def tuning(root: str, version: str, num_strings: int):
 
 # Allows user to input tuning for tab
 # Returns dictionary: 
-# Key  =  each note
+# Key   =  each note
 # Value = empty list
 def add_strings():
     strings = {}
@@ -136,6 +160,11 @@ def add_strings():
 
 # Take user input Tuning and confirmation
 def get_tuning():
+    
+    print('\nInput strings from Highest to Lowest \n'
+        'If you have a repeated letter, use the letter twice, (A and AA, A# and AA#) \n'
+        'You can also type presets like "Drop G 7" or "E Standard 6" \n\n')
+    
     while True:
         strings = add_strings()
         for i in strings:
@@ -293,11 +322,11 @@ def get_input_for_subtab(strings: dict):
                 print("Not a segment number")
                 continue
 
-        if "GAP" in fret or "UNDO" in fret:
-            #Let it pass through
-            pass
-
-        elif string_contains_note(fret):
+        if "OPTION" in fret:
+            print_options()
+            continue
+        
+        if string_contains_note(fret):
             target_string, fret = extract_note(fret)
             if target_string not in strings:
                 print("String does not exist")
@@ -402,6 +431,11 @@ def cut_tab(strings: dict):
     return False
 
 def get_new_tuning(og_strings: dict):
+    print('\nPlease add the New tuning\n'
+            'Input strings from Highest to Lowest \n'
+            'If you have a repeated letter, use the letter twice, (A and AA, A# and AA#) \n'
+            'You can also type presets like "Drop G 7" or "E Standard 6" \n\n')
+    
     while True:
         new_tuning = add_strings()
         if len(new_tuning) < len(og_strings):
@@ -498,11 +532,7 @@ def down_an_octave(new_strings: dict, target_file: str):
 
     return None
 #------------------------------------------------------------------------------------
-print()
-print('Input strings from Highest to Lowest')
-print('If you have a repeated letter, use the letter twice, (A and AA, A# and AA#)')
-print('You can also type presets like "Drop G 7" or "E Standard 6"')
-print()
+
 
 strings = get_tuning()
 print()
@@ -513,20 +543,7 @@ print_tab(strings[0])
 target_file = create_tab_file()
 write_to_tab_file(strings[0], target_file)
 
-
-print('You start on the highest string')
-print('You can use "u"/"up" and "d"/"down" to traverse the strings')
-print('Then type the fret on the given string')
-print('If you want to do multiple of the same note do (12x4)')
-print("If you don't want to move between strings, you can also explicitly write the string (G12x4)\n")
-print('"Gap" if you want to make spaces between notes (gapx3)')
-print('"Undo" to remove the latest note (undox3)')
-print('"Break" to create segments in the tabs')
-print('"Switch to n" to move to segment n')
-print('"Done" to stop the program and translate the tabs')
-print('Not case sensitve =D')
-print()
-
+print_options()
 
 full_strings = get_input_for_fulltab(strings)
 # Many inputs later
@@ -542,7 +559,7 @@ if cut_tab(full_strings):
     print_tab(full_strings)
     write_to_tab_file(full_strings, target_file)
 
-print('\nPlease add the New tuning\n')
+
 new_tuning = get_new_tuning(full_strings)
 
 print("\n\n\n")
