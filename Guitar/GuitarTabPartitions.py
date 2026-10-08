@@ -10,8 +10,35 @@
 # add f 12 for quick and easy additions------
 # should I add strip for certain things?
 
+#Fix  G, GGG etc. as tunings
+# still no duplicates, but allows out of order
+
+"""
+drop g 7
+y
+Test
+
+"""
+
+
 conversion = {'A':0, 'A#':1, 'B':2, 'C':3, 'C#':4, 'D':5, 'D#':6, 'E':7, 'F':8, 'F#':9, 'G':10, 'G#':11}
 rconv = {v:k for k,v in conversion.items()}
+
+def string_contains_note(string:str):
+    for note in conversion:
+        if note in string:
+            return True
+    return False
+
+# For explicit input like F#12x4
+def extract_note(inp:str):
+    for index, char in enumerate(inp):
+        if char.isdigit():
+            string, fret = inp[:index], inp[index:]
+            #print(index, string, fret)
+            break
+    return string, fret
+
 
 # Returns a note shifted up n semitones
 def shift(note: str, n: int):
@@ -95,9 +122,9 @@ def add_strings():
             continue
         if y in conversion:
             pass
-        elif y[-1:] in strings and y[-2] == y[-1]:
+        elif y[-1:] in strings and y[-2] == y[-1]: # A, AA
             pass
-        elif y[-2:] in strings and y[-3] == y[-2]:
+        elif y[-2:] in strings and y[-3] == y[-2]: # A#, AA#
             pass
         else:
             print('Invalid string')
@@ -221,6 +248,7 @@ def get_input_for_subtab(strings: dict):
     list_of_strings = [i for i in strings]
     num_strings = len(list_of_strings)
     string_ptr = 0
+    notes = set(conversion)
 
     while True:
         target_string = list_of_strings[string_ptr]
@@ -266,24 +294,32 @@ def get_input_for_subtab(strings: dict):
                 continue
 
         #Retrieve Multiplier
+        if string_contains_note(fret):
+            target_string, fret = extract_note(fret)
+            if target_string not in strings:
+                print("String does not exist")
+                continue
+        
         multiplier = 1
         if 'X' in fret:
-            print(fret.split("X"))
+            #print(fret.split("X"))
             if len(fret.split("X")) != 2:
                 print("Too many inputs")
                 continue
 
             fret, multiplier = fret.split("X")
-            print(multiplier, multiplier.isdigit())
+            #print(multiplier, multiplier.isdigit())
             if not multiplier.isdigit():
                 print("Invalid multiplier")
                 continue
+
             multiplier = int(multiplier)
             if multiplier <= 0:
                 print("Please have a positive multiplier")
                 continue
 
         if fret in ("GAP","UNDO"):
+            #Let it pass through
             pass
 
         #Error Catching
@@ -341,9 +377,6 @@ def get_input_for_subtab(strings: dict):
         print_tab(strings, target_string)
         print() 
     
-
-
-
 
 
 def string_is_empty(notes: list[str]):    
