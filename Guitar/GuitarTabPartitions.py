@@ -293,13 +293,17 @@ def get_input_for_subtab(strings: dict):
                 print("Not a segment number")
                 continue
 
-        #Retrieve Multiplier
-        if string_contains_note(fret):
+        if "GAP" in fret or "UNDO" in fret:
+            #Let it pass through
+            pass
+
+        elif string_contains_note(fret):
             target_string, fret = extract_note(fret)
             if target_string not in strings:
                 print("String does not exist")
                 continue
-        
+
+        #Retrieve Multiplier
         multiplier = 1
         if 'X' in fret:
             #print(fret.split("X"))
@@ -514,10 +518,11 @@ print('You start on the highest string')
 print('You can use "u"/"up" and "d"/"down" to traverse the strings')
 print('Then type the fret on the given string')
 print('If you want to do multiple of the same note do (12x4)')
+print("If you don't want to move between strings, you can also explicitly write the string (G12x4)\n")
 print('"Gap" if you want to make spaces between notes (gapx3)')
 print('"Undo" to remove the latest note (undox3)')
 print('"Break" to create segments in the tabs')
-print('"Switch to n" to move between segment n')
+print('"Switch to n" to move to segment n')
 print('"Done" to stop the program and translate the tabs')
 print('Not case sensitve =D')
 print()
