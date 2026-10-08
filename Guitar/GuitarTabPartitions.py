@@ -2,12 +2,12 @@
 # Add restart
 # Check out to the Hellfire chorus
 # Check why DT Winter isnt showing more subtunings
-# Add chords
+# Add chords / Multiple strings in a single note
 
 # Insertion and deletion in the middle of the tab
 # also with cursor
 # Keep or remove the # lines for break ?
-# add f 12 for quick and easy additions
+# add f 12 for quick and easy additions------
 # should I add strip for certain things?
 
 conversion = {'A':0, 'A#':1, 'B':2, 'C':3, 'C#':4, 'D':5, 'D#':6, 'E':7, 'F':8, 'F#':9, 'G':10, 'G#':11}
@@ -104,13 +104,13 @@ def add_strings():
             continue
         strings[y] = []
         print_tab(strings)
+    print()
     return strings
 
 # Take user input Tuning and confirmation
 def get_tuning():
     while True:
         strings = add_strings()
-        print()
         for i in strings:
             print(i)
         print()
@@ -153,24 +153,22 @@ def create_tab_file():
 
 def write_to_tab_file(strings: dict, file_name: str):
     #Create a copy
-    cstrings = {k:[i for i in v] for k,v in strings.items()}
-    for i in cstrings:
-        maxlen = len(cstrings[i])
-        break
+    copied_strings = {k:[i for i in v] for k,v in strings.items()}
+    maxlen = max(len(v) for v in copied_strings.values())
 
     #Remove all buffers
     for i in range(maxlen-1,-1,-1):
-        line = [v[i] for v in cstrings.values()]
-        if line == ['-' for i in range(len(cstrings))]:
-            for v in cstrings.values():
-                del v[i]
+        line = [frets[i] for frets in copied_strings.values()]
+        if line == ['-' for _ in copied_strings]:
+            for frets in copied_strings.values():
+                del frets[i]
 
     #Write tab so you can copy to Google Sheets =D
-    maxlen = len(max(strings))
+    max_string_name = len(max(strings))
     with open(file_name, "a") as file:
-        for k,v in cstrings.items():
-            file.write(f'{k}{" "*(maxlen-len(k))} \t')
-            for i in v:
+        for string, frets in copied_strings.items():
+            file.write(f'{string}{" "*(max_string_name-len(frets))} \t')
+            for i in frets:
                 if i.isdigit() or i == '#': 
                     file.write(i)
                 file.write("\t")
@@ -239,7 +237,6 @@ def get_input_for_subtab(strings: dict):
                 print("Can't go higher")
             else:
                 string_ptr -= 1
-                
             continue
 
         if fret in ("D","DOWN"):
@@ -268,10 +265,7 @@ def get_input_for_subtab(strings: dict):
                 print("Not a segment number")
                 continue
 
-        
-
         #Retrieve Multiplier
-        
         multiplier = 1
         if 'X' in fret:
             print(fret.split("X"))
@@ -289,8 +283,6 @@ def get_input_for_subtab(strings: dict):
                 print("Please have a positive multiplier")
                 continue
 
-
-        # Allow gapx3 and undox3
         if fret in ("GAP","UNDO"):
             pass
 
@@ -354,12 +346,12 @@ def get_input_for_subtab(strings: dict):
 
 
 
-
 def string_is_empty(notes: list[str]):    
     for i in notes:
         if i not in ('-','--','#'):
             return False
     return True
+    # return all(char in ('-','--','#') for char in notes)
 
 # removes strings that aren't used
 # returns whether strings were cut or not
@@ -375,18 +367,18 @@ def cut_tab(strings: dict):
 def get_new_tuning(og_strings: dict):
     while True:
         new_tuning = add_strings()
-        print()
         if len(new_tuning) < len(og_strings):
             print('Not enough strings')
             continue
+
         for i in new_tuning:
             print(i)
         print()
+
         reset = input('Confirm (Y/N) ').upper()
         if reset in ("Y","YES"):
             return list(new_tuning)
-        else:
-            continue
+        continue
 
 def translate(og_strings: dict, new_tuning: list[str], target_file: str):
     #For each subtuning
