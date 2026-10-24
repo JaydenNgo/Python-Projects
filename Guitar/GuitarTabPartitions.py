@@ -7,11 +7,14 @@
 # Insertion and deletion in the middle of the tab
 # also with cursor
 # Keep or remove the # lines for break ?
-# add f 12 for quick and easy additions------
+# add f 12 for quick and easy additions------ DONE
 # should I add strip for certain things?
 
 #Fix  G, GGG etc. as tunings
 # still no duplicates, but allows out of order
+
+#Ask if file name is good or keep it the way it is
+#change file writing to both pretty AND tab delim
 
 """
 drop g 7
@@ -25,11 +28,8 @@ notes = ['A#', 'C#', 'D#', 'F#', 'G#', 'A', 'B', 'C', 'D', 'E', 'F', 'G']
 conversion = {'A':0, 'A#':1, 'B':2, 'C':3, 'C#':4, 'D':5, 'D#':6, 'E':7, 'F':8, 'F#':9, 'G':10, 'G#':11}
 rconv = {v:k for k,v in conversion.items()}
 
-# True for F#12
-# True for F#12x4
-# True for FF#12x4
-# False for GAP
-def string_contains_note(string:str):
+# Checks for explicit string notes like F#12x4
+def explicit_string(string:str):
     for note in notes:
         if note in string:
             ind = string.rindex(note)
@@ -62,7 +62,8 @@ def print_options():
         '"Switch to n" to move to segment n \n'
         '"Done" to stop the program and translate the tabs \n'
         '"Option" if you would like to see these options again \n'
-        'Not case sensitve =D \n')
+        'Not case sensitve =D \n'
+        )
 
 # Returns a note shifted up n semitones
 def shift(note: str, n: int):
@@ -325,8 +326,8 @@ def get_input_for_subtab(strings: dict):
         if "OPTION" in fret:
             print_options()
             continue
-        
-        if string_contains_note(fret):
+
+        if explicit_string(fret):
             target_string, fret = extract_note(fret)
             if target_string not in strings:
                 print("String does not exist")
@@ -407,9 +408,7 @@ def get_input_for_subtab(strings: dict):
                             strings[i].append('-')
                         strings[i].append('-')
     
-        print_tab(strings, target_string)
-        print() 
-    
+        print_tab(strings, target_string)    
 
 
 def string_is_empty(notes: list[str]):    
@@ -532,30 +531,29 @@ def down_an_octave(new_strings: dict, target_file: str):
 
     return None
 #------------------------------------------------------------------------------------
-
-
 strings = get_tuning()
-print()
 
-print('Original Tuning')
+
+print('\nOriginal Tuning')
 print_tab(strings[0])
 
 target_file = create_tab_file()
 write_to_tab_file(strings[0], target_file)
 
 print_options()
-
 full_strings = get_input_for_fulltab(strings)
+
+#------------------------------------------------
 # Many inputs later
-print()
-print('Original Tab')
+#------------------------------------------------
+
+print('\nOriginal Tab')
 print_tab(full_strings)
-print()
+print("\n")
   
 # Cut out strings that aren't used
 if cut_tab(full_strings):
-    print()
-    print("Cut strings")
+    print("\nCut strings")
     print_tab(full_strings)
     write_to_tab_file(full_strings, target_file)
 
