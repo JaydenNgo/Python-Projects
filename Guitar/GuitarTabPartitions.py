@@ -26,10 +26,15 @@ Test
 
 notes = ['A#', 'C#', 'D#', 'F#', 'G#', 'A', 'B', 'C', 'D', 'E', 'F', 'G']
 conversion = {'A':0, 'A#':1, 'B':2, 'C':3, 'C#':4, 'D':5, 'D#':6, 'E':7, 'F':8, 'F#':9, 'G':10, 'G#':11}
-rconv = {v:k for k,v in conversion.items()}
+reverse_conv = {v:k for k,v in conversion.items()}
 
-# Checks for explicit string notes like F#12x4
+# Checks if manual string notes like F#12x4 are valid inpu
 def explicit_string(string:str):
+    """
+    Checks if manual string notes like F#12x4 are valid input \n
+    return boolean True/False
+    """
+
     for note in notes:
         if note in string:
             ind = string.rindex(note)
@@ -41,8 +46,13 @@ def explicit_string(string:str):
     #print(fret[0].isdigit())
     return fret[0].isdigit()
 
-# For explicit input like F#12x4              
+# For explicit input like F#12x4      
 def extract_note(inp:str):
+    """
+    For explicit input like F#12x4 \n
+    returns string and fret from input ex:(F, 12)
+    """
+
     for index, char in enumerate(inp):
         if char.isdigit():
             string, fret = inp[:index], inp[index:]
@@ -67,18 +77,23 @@ def print_options():
 
 # Returns a note shifted up n semitones
 def shift(note: str, n: int):
-    return rconv[(conversion[note]+n) % 12]
+    """Returns a {note} shifted up {n} semitones"""
+    return reverse_conv[(conversion[note]+n) % 12]
 
 # returns standard tuning for n strings (4-7)
 def standards(n: int):
+    """returns standard tuning for n strings (4-7)"""
     standard = ['B','E', 'A', 'D', 'G', 'B', 'E']
     if   n == 4: return standard[1:5]
     elif n == 5: return standard[:5]
     elif n == 6: return standard[1:7]
     elif n == 7: return standard
 
-# Returns drop or standard tuning depending on root note and # of strings
+# Returns drop or standard tuning depending on {root} note and {# of string}s
 def tuning(root: str, version: str, num_strings: int):
+    '''
+    Returns drop or standard tuning depending on {root} note and {# of string}s
+    '''
 
     standard = standards(num_strings)
     diff = conversion[root] - conversion[standard[0]]
@@ -91,26 +106,45 @@ def tuning(root: str, version: str, num_strings: int):
         
     return tune
 
+# help determine inserting new note into tuning
+def new_note(note: str, strings:dict):
+    """
+    used to help determine inserting new note into tuning\n
+    if note not in tuning, returns note \n
+    else return the next extended version (AA exists --> AAA)
+    """
+
+    if note not in strings:
+        return note
+    return new_note(note[0] + note, strings)
+
 # Allows user to input tuning for tab
-# Returns dictionary: 
-# Key   =  each note
-# Value = empty list
+# Returns dictionary:
+# Key   = each note
+# Value = empty
 def add_strings():
+    '''
+    Allows user to input tuning for tab \n
+    Returns dictionary: \n
+    Key   = each note \n
+    Value = empty list
+    '''
+
     strings = {}
     while True:
-        y = input('Add string: ').upper()
-        if 'DROP' in y or 'STANDARD' in y:
-            inp = y.split()
+        inp = input('Add string: ').upper()
+        if 'DROP' in inp or 'STANDARD' in inp:
+            inp = inp.split()
             if len(inp) != 3:
                 print("Invalid Tuning \n")
                 continue 
 
             #Drop tuning
-            if 'DROP' in y:
+            if 'DROP' in inp:
                 mode, note, num_strings = inp
 
             #Standard Tuning
-            if 'STANDARD' in y:
+            if 'STANDARD' in inp:
                 note, mode, num_strings = inp
         
             #Error Checking
@@ -137,33 +171,28 @@ def add_strings():
                 break
 
         #Manually add Tuning
-        if len(y) == 0:
+        if len(inp) == 0:     #pressed enter
             if len(strings) == 0:
                 print("There are no strings, please add some :D")
                 continue
             break
-        if y in strings:
-            print('Already added')
-            continue
-        if y in conversion:
-            pass
-        elif y[-1:] in strings and y[-2] == y[-1]: # A, AA
-            pass
-        elif y[-2:] in strings and y[-3] == y[-2]: # A#, AA#
-            pass
-        else:
+
+        if inp not in conversion:
             print('Invalid string')
             continue
-        strings[y] = []
+
+        inp = new_note(inp, strings)
+        strings[inp] = []
         print_tab(strings)
     print()
     return strings
 
 # Take user input Tuning and confirmation
 def get_tuning():
-    
+    """ Take user input Tuning and confirmation """
+
     print('\nInput strings from Highest to Lowest \n'
-        'If you have a repeated letter, use the letter twice, (A and AA, A# and AA#) \n'
+        'If you have a repeated note/letter, it will automatically get a new name \n'
         'You can also type presets like "Drop G 7" or "E Standard 6" \n\n')
     
     while True:
@@ -176,8 +205,12 @@ def get_tuning():
             return [strings]
         continue
 
-#Get notes for calculation
+# Get notes for calculation
 def true_notes(strings: dict):
+    """
+    Get notes for calculation \n
+    returns list of notes the tuning represents
+    """
     notes = []
     for string in strings:
         if string[-1] in conversion:
@@ -190,6 +223,10 @@ def true_notes(strings: dict):
 
 # Print out tab
 def print_tab(strings: dict, current_string: str = None):
+    """ 
+    Print out tab \n
+    Includes optional current string <-- for better visual
+    """
     for string, notes in strings.items():
         print(f'{string:4}{"".join(notes)}', end = '')
         if string == current_string:
@@ -198,8 +235,13 @@ def print_tab(strings: dict, current_string: str = None):
             print()
     print("\n")
 
-#Initialize tab file
+# Initialize tab file
 def create_tab_file():
+    """
+    Initialize tab file to save tab \n
+    return given file name
+    """
+
     file_name = input("Give this tab a name \n")
     target_file = f"tabs/{file_name}.txt"
     with open(target_file, "w") as file:
@@ -208,7 +250,13 @@ def create_tab_file():
         print()
     return target_file
 
+# writes tab to file
 def write_to_tab_file(strings: dict, file_name: str):
+    """
+    writes tab to file \n
+    return None
+    """
+
     #Create a copy
     copied_strings = {k:[i for i in v] for k,v in strings.items()}
     maxlen = max(len(v) for v in copied_strings.values())
@@ -232,8 +280,14 @@ def write_to_tab_file(strings: dict, file_name: str):
             file.write("\n")
         file.write("\n")
 
-
+# Retrieve input for adding subtabs, moving between subtabs, finish adding
 def get_input_for_fulltab(tabs = list[dict]):
+    """
+    Retrieve macro input for: \n
+    adding subtabs, moving between subtabs, finish adding notes \n
+    includes confirmation \n
+    returns merged full tab (dict[list])
+    """
     segment_ptr = 0
     current_subtab = tabs[segment_ptr]
     tuning = list(current_subtab)
@@ -273,8 +327,14 @@ def get_input_for_fulltab(tabs = list[dict]):
     
     return full_tab
 
-
+# get input for current subtab/tuning
 def get_input_for_subtab(strings: dict):
+    """
+    get input for current subtab/tuning \n
+    look at print_option() for different option types \n
+    return None
+    """
+
     list_of_strings = [i for i in strings]
     num_strings = len(list_of_strings)
     string_ptr = 0
@@ -410,8 +470,12 @@ def get_input_for_subtab(strings: dict):
     
         print_tab(strings, target_string)    
 
-
-def string_is_empty(notes: list[str]):    
+# Return if string has no notes in it
+def string_is_empty(notes: list[str]):
+    """
+    checks if string consists of only '-', '--', and '#' \n
+    returns boolean True/False
+    """
     for i in notes:
         if i not in ('-','--','#'):
             return False
@@ -421,15 +485,25 @@ def string_is_empty(notes: list[str]):
 # removes strings that aren't used
 # returns whether strings were cut or not
 def cut_tab(strings: dict):
+    """
+    removes strings that aren't used and have no notes \n
+    returns whether strings were cut or not (boolean)
+    
+    """
     to_cut = [k for k,v in strings.items() if string_is_empty(v)]
-  
     if len(to_cut) > 0:
         for i in to_cut:
             del strings[i]
         return True
     return False
 
+# retreive new tuning to translate tab to
 def get_new_tuning(og_strings: dict):
+    """
+    retreive new tuning to translate tab to \n
+    returns list[dict]
+    
+    """
     print('\nPlease add the New tuning\n'
             'Input strings from Highest to Lowest \n'
             'If you have a repeated letter, use the letter twice, (A and AA, A# and AA#) \n'
@@ -450,7 +524,13 @@ def get_new_tuning(og_strings: dict):
             return list(new_tuning)
         continue
 
+# translate tab
 def translate(og_strings: dict, new_tuning: list[str], target_file: str):
+    """
+    translates tab into new tuning \n
+    writes translation to target_file \n
+    return None
+    """
     #For each subtuning
     print_tab(og_strings)
     num_strings = len(og_strings)
@@ -484,8 +564,15 @@ def translate(og_strings: dict, new_tuning: list[str], target_file: str):
         if all(num >= 12 for num in all_frets):
             down_an_octave(new_strings, target_file)
         
-
+# translate sub tuning
+# called by translate()
 def sub_translate(new_strings: dict, diff_list: list[str], target_file: str):
+    """
+    Used to translate individual subtunings \n
+    writes subtuning to target file \n
+    returns which frets are used, for down_an_octave(), (set)
+    """
+
     all_frets = set()
     for newstring, diffs in zip(new_strings, diff_list):
         frets = new_strings[newstring]
@@ -509,7 +596,14 @@ def sub_translate(new_strings: dict, diff_list: list[str], target_file: str):
     
     return all_frets
 
+# shift down an octave if applicable
+# called by translate()
 def down_an_octave(new_strings: dict, target_file: str):
+    """
+    if all frets used are 12 and above, translate tab down an octave \n
+    writes result to target file \n
+    return None
+    """
     # If all frets are 12+, also show lower on the fretboard
     for newstring in new_strings:
         frets = new_strings[newstring]
@@ -529,10 +623,8 @@ def down_an_octave(new_strings: dict, target_file: str):
     write_to_tab_file(new_strings,target_file)
     print("\n\n\n")
 
-    return None
 #------------------------------------------------------------------------------------
 strings = get_tuning()
-
 
 print('\nOriginal Tuning')
 print_tab(strings[0])
