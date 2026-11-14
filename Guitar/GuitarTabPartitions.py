@@ -7,11 +7,11 @@
 # Insertion and deletion in the middle of the tab
 # also with cursor
 # Keep or remove the # lines for break ?
-# add f 12 for quick and easy additions------ DONE
+
 # should I add strip for certain things?
 
-#Fix  G, GGG etc. as tunings
-# still no duplicates, but allows out of order
+
+# maybe have cut tab not cut in between
 
 #Ask if file name is good or keep it the way it is
 #change file writing to both pretty AND tab delim
@@ -34,16 +34,19 @@ def explicit_string(string:str):
     Checks if manual string notes like F#12x4 are valid input \n
     return boolean True/False
     """
-
+    if len(string) < 2:
+        return False
     for note in notes:
         if note in string:
             ind = string.rindex(note)
             fret = string[ind+1:]
-            print(ind,fret)
+            if len(fret) < 1:
+                print("No fret found")
+                return False
             break
     else:
         return False
-    #print(fret[0].isdigit())
+
     return fret[0].isdigit()
 
 # For explicit input like F#12x4      
@@ -56,7 +59,7 @@ def extract_note(inp:str):
     for index, char in enumerate(inp):
         if char.isdigit():
             string, fret = inp[:index], inp[index:]
-            print(index, string, fret)
+            #print(index, string, fret)
             break
     return string, fret
 
@@ -135,6 +138,7 @@ def add_strings():
         inp = input('Add string: ').upper()
         if 'DROP' in inp or 'STANDARD' in inp:
             inp = inp.split()
+            print(inp)
             if len(inp) != 3:
                 print("Invalid Tuning \n")
                 continue 
@@ -142,10 +146,12 @@ def add_strings():
             #Drop tuning
             if 'DROP' in inp:
                 mode, note, num_strings = inp
-
             #Standard Tuning
-            if 'STANDARD' in inp:
+            elif 'STANDARD' in inp:
                 note, mode, num_strings = inp
+            else:
+                print("Mode not detected")
+                continue
         
             #Error Checking
             if not num_strings.isdigit():
@@ -228,7 +234,7 @@ def print_tab(strings: dict, current_string: str = None):
     Includes optional current string <-- for better visual
     """
     for string, notes in strings.items():
-        print(f'{string:4}{"".join(notes)}', end = '')
+        print(f'{string:4}|{"".join(notes)}|', end = '')
         if string == current_string:
             print(" <--")
         else:
@@ -286,7 +292,7 @@ def get_input_for_fulltab(tabs = list[dict]):
     Retrieve macro input for: \n
     adding subtabs, moving between subtabs, finish adding notes \n
     includes confirmation \n
-    returns merged full tab (dict[list])
+    returns merged full tab (dict[char:list])
     """
     segment_ptr = 0
     current_subtab = tabs[segment_ptr]
