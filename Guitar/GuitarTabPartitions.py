@@ -2,16 +2,12 @@
 # Add restart
 # Check out to the Hellfire chorus
 # Check why DT Winter isnt showing more subtunings
+
 # Add chords / Multiple strings in a single note
 
 # Insertion and deletion in the middle of the tab
 # also with cursor
 # Keep or remove the # lines for break ?
-
-# should I add strip for certain things?
-
-
-# maybe have cut tab not cut in between
 
 #Ask if file name is good or keep it the way it is
 #change file writing to both pretty AND tab delim
@@ -493,10 +489,26 @@ def string_is_empty(notes: list[str]):
 def cut_tab(strings: dict):
     """
     removes strings that aren't used and have no notes \n
-    returns whether strings were cut or not (boolean)
-    
+    returns True if strings were removed, False otherwise
     """
-    to_cut = [k for k,v in strings.items() if string_is_empty(v)]
+    print("cutting")
+    to_cut = {}
+    list_strings = [k for k in strings.keys()]
+
+    for string in list_strings:
+        if string_is_empty(strings[string]):
+            to_cut.add(string)
+        else:
+            break
+
+    for string in list_strings[::-1]:
+        if string_is_empty(strings[string]):
+            to_cut.add(string)
+        else:
+            break
+
+    #to_cut = [k for k,v in strings.items() if string_is_empty(v)]
+
     if len(to_cut) > 0:
         for i in to_cut:
             del strings[i]
